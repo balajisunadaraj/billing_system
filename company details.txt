@@ -1,0 +1,7 @@
+company details
+
+company name, phone number, address, gst, plate rate, plate type(A,B,C,D)
+
+billing
+
+add plate type
