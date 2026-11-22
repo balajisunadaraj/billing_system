@@ -27,7 +27,7 @@ export default function Reports() {
           <p className="mt-3 text-slate-500">Generate daily, weekly, monthly, and yearly reports. Export to PDF or Excel from the backend.</p>
         </div>
       </div>
-      {message && <div className="message-box">{message}</div>}
+      {message && <div className="message-box message-box-error">{message}</div>}
       <div className="grid gap-6 xl:grid-cols-3">
         <div className="page-card">
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Purchase Plates</p>
@@ -56,8 +56,8 @@ export default function Reports() {
             <h2 className="text-lg font-semibold text-slate-900">{period} Report</h2>
             <p className="mt-3 text-slate-500">Export current result to PDF or Excel.</p>
             <div className="mt-6 flex flex-col gap-3">
-              <button className="rounded-3xl bg-slate-950 px-4 py-3 text-white transition hover:bg-slate-800">Export PDF</button>
-              <button className="rounded-3xl bg-slate-200 px-4 py-3 text-slate-900 transition hover:bg-slate-300">Export Excel</button>
+              <button className="rounded-3xl bg-slate-950 px-4 py-3 text-white font-medium transition-all hover:bg-slate-800 active:scale-95">Export PDF</button>
+              <button className="rounded-3xl border-2 border-slate-200 bg-white px-4 py-3 text-slate-900 font-medium transition-all hover:border-slate-300 hover:bg-slate-50 active:scale-95">Export Excel</button>
             </div>
           </div>
         ))}

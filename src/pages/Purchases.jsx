@@ -7,7 +7,6 @@ const initialForm = {
   plateType: '',
   quantityPurchased: '',
   wasteQuantity: '',
-  notes: ''
 };
 
 export default function Purchases() {
@@ -15,6 +14,8 @@ export default function Purchases() {
   const [purchases, setPurchases] = useState([]);
   const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState('');
+  const selectedCompany = companies.find((company) => company.id === Number(form.companyId));
+  const availablePlateTypes = (selectedCompany?.plate_type || '').split(',').map((type) => type.trim()).filter(Boolean);
 
   useEffect(() => {
     loadData();
@@ -42,8 +43,7 @@ export default function Purchases() {
           company_id: Number(form.companyId),
           plate_type: form.plateType,
           quantity_purchased: Number(form.quantityPurchased),
-          waste_quantity: Number(form.wasteQuantity),
-          notes: form.notes
+          waste_quantity: Number(form.wasteQuantity)
         }
       });
       setMessage('Purchase entry saved.');
@@ -64,7 +64,11 @@ export default function Purchases() {
           </div>
         </div>
       </div>
-      {message && <div className="message-box">{message}</div>}
+      {message && (
+        <div className={message.includes('saved') ? 'message-box message-box-success' : 'message-box message-box-error'}>
+          {message}
+        </div>
+      )}
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="page-card">
           <form onSubmit={addPurchase} className="grid gap-5">
@@ -84,7 +88,7 @@ export default function Purchases() {
                 <select
                   required
                   value={form.companyId}
-                  onChange={(event) => setForm({ ...form, companyId: event.target.value })}
+                  onChange={(event) => setForm({ ...form, companyId: event.target.value, plateType: '' })}
                   className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
                 >
                   <option value="">Select company</option>
@@ -99,12 +103,17 @@ export default function Purchases() {
             <div className="grid gap-4 md:grid-cols-2">
               <label className="block text-sm font-medium text-slate-700">
                 Plate Type
-                <input
+                <select
                   value={form.plateType}
                   onChange={(event) => setForm({ ...form, plateType: event.target.value })}
                   required
                   className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
-                />
+                >
+                  <option value="">Select plate type</option>
+                  {availablePlateTypes.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
               </label>
               <label className="block text-sm font-medium text-slate-700">
                 Quantity Purchased
@@ -134,16 +143,7 @@ export default function Purchases() {
                 </div>
               </div>
             </div>
-            <label className="block text-sm font-medium text-slate-700">
-              Notes
-              <textarea
-                value={form.notes}
-                onChange={(event) => setForm({ ...form, notes: event.target.value })}
-                rows={4}
-                className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
-              />
-            </label>
-            <button type="submit" className="rounded-3xl bg-slate-950 px-6 py-3 text-white transition hover:bg-slate-800">
+            <button type="submit" className="rounded-3xl bg-slate-950 px-6 py-3 text-white font-medium transition-all hover:bg-slate-800 active:scale-95 focus:ring-2 focus:ring-slate-400 focus:ring-offset-2">
               Save Purchase
             </button>
           </form>
@@ -157,6 +157,7 @@ export default function Purchases() {
                 <tr>
                   <th>Date</th>
                   <th>Company</th>
+                  <th>Plate Type</th>
                   <th>Purchased</th>
                   <th>Waste</th>
                   <th>Available</th>
@@ -167,6 +168,7 @@ export default function Purchases() {
                   <tr key={purchase.id} className="border-b border-slate-200 last:border-none">
                     <td>{purchase.purchase_date}</td>
                     <td>{purchase.company_name}</td>
+                    <td>{purchase.plate_type || 'Not set'}</td>
                     <td>{purchase.quantity_purchased}</td>
                     <td>{purchase.waste_quantity}</td>
                     <td>{purchase.quantity_purchased - purchase.waste_quantity}</td>
@@ -174,7 +176,7 @@ export default function Purchases() {
                 ))}
                 {purchases.length === 0 && (
                   <tr>
-                    <td colSpan="5" className="p-6 text-center text-slate-500">
+                    <td colSpan="6" className="p-6 text-center text-slate-500">
                       No purchase records yet.
                     </td>
                   </tr>

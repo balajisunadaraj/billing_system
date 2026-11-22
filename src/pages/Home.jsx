@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-
-const API_BASE = 'http://localhost:4000/api';
+import { authFetch } from '../lib/api.js';
 
 function Home() {
   const [products, setProducts] = useState([]);
@@ -35,8 +34,7 @@ function Home() {
 
   async function fetchProducts() {
     try {
-      const response = await fetch(`${API_BASE}/products`);
-      const data = await response.json();
+      const data = await authFetch('/products');
       setProducts(data.products || []);
     } catch (error) {
       setMessage('Unable to load products.');
@@ -59,19 +57,13 @@ function Home() {
       saleDate: form.saleDate || new Date().toISOString().slice(0, 10)
     };
 
-    const response = await fetch(`${API_BASE}/sales`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const result = await response.json();
-    if (response.ok) {
+    try {
+      await authFetch('/sales', { method: 'POST', body: payload });
       setMessage('Sale complete. Remaining stock updated.');
       setForm({ productId: '', quantity: '', amountPaid: '', saleDate: '' });
       fetchProducts();
-    } else {
-      setMessage(result.error || 'Unable to complete sale.');
+    } catch (error) {
+      setMessage(error.message || 'Unable to complete sale.');
     }
   }
 

@@ -12,10 +12,10 @@ import NotFound from './pages/NotFound.jsx';
 
 function App() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 text-slate-900">
       <div className="xl:flex xl:min-h-screen xl:items-stretch xl:gap-6 xl:px-6 xl:py-6">
         <Sidebar />
-        <div className="flex-1 xl:rounded-[32px] xl:border xl:border-slate-200 xl:bg-white xl:shadow-soft xl:p-8">
+        <div className="flex-1 xl:rounded-[32px] xl:border xl:border-slate-200 xl:bg-white xl:shadow-soft xl:p-8 overflow-y-auto">
           <Routes>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/companies" element={<Companies />} />

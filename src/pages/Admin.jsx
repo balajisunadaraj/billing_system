@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-
-const API_BASE = 'http://localhost:4000/api';
+import { authFetch } from '../lib/api.js';
 
 function Admin() {
   const [products, setProducts] = useState([]);
@@ -14,16 +13,13 @@ function Admin() {
   }, []);
 
   async function fetchData() {
-    const [productRes, reportRes] = await Promise.all([
-      fetch(`${API_BASE}/products`),
-      fetch(`${API_BASE}/report`)
-    ]);
-
-    const productsJson = await productRes.json();
-    const reportJson = await reportRes.json();
-
-    setProducts(productsJson.products || []);
-    setReport(reportJson);
+    try {
+      const [productsJson, reportJson] = await Promise.all([authFetch('/products'), authFetch('/report')]);
+      setProducts(productsJson.products || []);
+      setReport(reportJson);
+    } catch (error) {
+      setMessage(error.message || 'Unable to load admin data.');
+    }
   }
 
   async function handleAddProduct(event) {
@@ -34,19 +30,13 @@ function Admin() {
       quantity: Number(productForm.quantity)
     };
 
-    const response = await fetch(`${API_BASE}/products`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const result = await response.json();
-    if (response.ok) {
+    try {
+      await authFetch('/products', { method: 'POST', body: payload });
       setProductForm({ name: '', purchasePrice: '', quantity: '' });
       setMessage('Product added successfully. Sale price will use a default markup.');
       fetchData();
-    } else {
-      setMessage(result.error || 'Unable to add product.');
+    } catch (error) {
+      setMessage(error.message || 'Unable to add product.');
     }
   }
 
@@ -59,18 +49,13 @@ function Admin() {
       saleDate: saleForm.saleDate || new Date().toISOString().slice(0, 10)
     };
 
-    const response = await fetch(`${API_BASE}/sales`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const result = await response.json();
-    if (response.ok) {
+    try {
+      await authFetch('/sales', { method: 'POST', body: payload });
       setSaleForm({ productId: '', quantitySold: '', amountPaid: '', saleDate: '' });
       setMessage('Sale recorded successfully.');
       fetchData();
-    } else {
-      setMessage(result.error || 'Unable to record sale.');
+    } catch (error) {
+      setMessage(error.message || 'Unable to record sale.');
     }
   }
 

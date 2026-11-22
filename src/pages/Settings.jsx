@@ -7,7 +7,7 @@ const initialForm = {
   phone_number: '',
   email: '',
   address: '',
-  gst_number: '',
+  gst_percentage: '',
   company_logo_url: '',
   signature_image_url: '',
   upi_qr_url: '',
@@ -55,7 +55,11 @@ export default function Settings() {
           <h1 className="mt-2 text-3xl font-semibold text-slate-900">Invoice & Company Details</h1>
         </div>
       </div>
-      {message && <div className="message-box">{message}</div>}
+      {message && (
+        <div className={message.includes('updated') ? 'message-box message-box-success' : 'message-box message-box-error'}>
+          {message}
+        </div>
+      )}
       <div className="page-card">
         <form onSubmit={saveSettings} className="grid gap-5">
           <div className="grid gap-4 md:grid-cols-2">
@@ -107,10 +111,14 @@ export default function Settings() {
           </label>
           <div className="grid gap-4 md:grid-cols-2">
             <label className="block text-sm font-medium text-slate-700">
-              GST Number
+              GST Percentage (Optional)
               <input
-                value={form.gst_number}
-                onChange={(event) => setForm({ ...form, gst_number: event.target.value })}
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                value={form.gst_percentage}
+                onChange={(event) => setForm({ ...form, gst_percentage: event.target.value })}
                 className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
               />
             </label>
@@ -167,7 +175,7 @@ export default function Settings() {
               className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
             />
           </label>
-          <button type="submit" className="rounded-3xl bg-slate-950 px-6 py-3 text-white transition hover:bg-slate-800">
+          <button type="submit" className="rounded-3xl bg-slate-950 px-6 py-3 text-white font-medium transition-all hover:bg-slate-800 active:scale-95 focus:ring-2 focus:ring-slate-400 focus:ring-offset-2">
             Save Settings
           </button>
         </form>

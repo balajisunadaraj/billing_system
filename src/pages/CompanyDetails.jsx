@@ -44,8 +44,8 @@ export default function CompanyDetails() {
             <p><strong>Contact:</strong> {details?.contact_person}</p>
             <p><strong>Phone:</strong> {details?.phone_number}</p>
             <p><strong>Email:</strong> {details?.email}</p>
-            <p><strong>GST:</strong> {details?.gst_number || 'N/A'}</p>
-            <p><strong>Plate Rate:</strong> ₹{details?.plate_rate?.toFixed(2) ?? '0.00'}</p>
+            <p><strong>GST Percentage:</strong> {Number(details?.gst_percentage) || 0}%</p>
+            <p><strong>Plate Type:</strong> {details?.plate_type || 'Not set'}</p>
           </div>
         </div>
         <div className="page-card">

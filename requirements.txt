@@ -1,0 +1,3 @@
+# This project is a Node.js + React application.
+# Runtime dependencies are managed in package.json and installed with npm install.
+# This file is included as a compatibility stub for tooling that expects a requirements.txt.

@@ -41,27 +41,38 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <button className="rounded-3xl bg-white px-5 py-4 text-left text-slate-900 shadow-soft transition hover:-translate-y-0.5">
+          <button className="rounded-3xl bg-white px-5 py-4 text-left text-slate-900 shadow-soft transition-all hover:shadow-lg hover:-translate-y-0.5 active:scale-95 font-medium">
             New Purchase
           </button>
-          <button className="rounded-3xl bg-white px-5 py-4 text-left text-slate-900 shadow-soft transition hover:-translate-y-0.5">
+          <button className="rounded-3xl bg-white px-5 py-4 text-left text-slate-900 shadow-soft transition-all hover:shadow-lg hover:-translate-y-0.5 active:scale-95 font-medium">
             New Delivery
           </button>
-          <button className="rounded-3xl bg-white px-5 py-4 text-left text-slate-900 shadow-soft transition hover:-translate-y-0.5">
+          <button className="rounded-3xl bg-white px-5 py-4 text-left text-slate-900 shadow-soft transition-all hover:shadow-lg hover:-translate-y-0.5 active:scale-95 font-medium">
             Generate Invoice
           </button>
         </div>
       </div>
 
-      {message && <div className="message-box">{message}</div>}
+      {message && <div className="message-box message-box-error">{message}</div>}
 
       <div className="grid gap-6 xl:grid-cols-3">
-        {cards.map((card) => (
-          <div key={card.key} className="rounded-[28px] bg-gradient-to-br p-6 text-white shadow-soft">
-            <p className="text-sm font-medium text-slate-200">{card.label}</p>
-            <p className="mt-6 text-4xl font-semibold">{summary[card.key] ?? '0'}</p>
-          </div>
-        ))}
+        {cards.map((card) => {
+          const getGradientClass = (color) => {
+            if (color.includes('cyan')) return 'bg-gradient-to-br from-cyan-500 to-blue-600';
+            if (color.includes('violet')) return 'bg-gradient-to-br from-violet-500 to-indigo-600';
+            if (color.includes('emerald')) return 'bg-gradient-to-br from-emerald-500 to-teal-600';
+            if (color.includes('slate')) return 'bg-gradient-to-br from-slate-500 to-slate-700';
+            if (color.includes('amber')) return 'bg-gradient-to-br from-amber-500 to-orange-600';
+            if (color.includes('fuchsia')) return 'bg-gradient-to-br from-fuchsia-500 to-pink-600';
+            return 'bg-gradient-to-br from-rose-500 to-red-600';
+          };
+          return (
+            <div key={card.key} className={`rounded-[28px] p-6 text-white shadow-soft transition-all duration-200 hover:shadow-lg hover:scale-105 ${getGradientClass(card.color)}`}>
+              <p className="text-sm font-medium text-slate-200">{card.label}</p>
+              <p className="mt-6 text-4xl font-semibold">{summary[card.key] ?? '0'}</p>
+            </div>
+          );
+        })}
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -99,14 +110,17 @@ export default function Dashboard() {
         <div className="page-card">
           <h3 className="section-title">Notifications</h3>
           <div className="space-y-4">
-            <div className="rounded-3xl border border-rose-100 bg-rose-50 p-5 text-rose-700">
-              Low stock alerts will appear here once your delivery and purchase records update.
+            <div className="alert-box alert-error">
+              <strong>Low Stock Alert</strong>
+              <p className="mt-1 text-sm">Low stock alerts will appear here once your delivery and purchase records update.</p>
             </div>
-            <div className="rounded-3xl border border-amber-100 bg-amber-50 p-5 text-amber-700">
-              Pending invoices are tracked automatically after billing entries.
+            <div className="alert-box alert-warning">
+              <strong>Pending Invoices</strong>
+              <p className="mt-1 text-sm">Pending invoices are tracked automatically after billing entries.</p>
             </div>
-            <div className="rounded-3xl border border-cyan-100 bg-cyan-50 p-5 text-cyan-700">
-              Today’s purchases and deliveries are shown in the purchase and delivery pages.
+            <div className="alert-box alert-info">
+              <strong>Today's Activity</strong>
+              <p className="mt-1 text-sm">Today's purchases and deliveries are shown in the purchase and delivery pages.</p>
             </div>
           </div>
         </div>

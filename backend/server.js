@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
-import { query, get, all } from './db.js';
+import { query, get, all, dbReady } from './db.js';
 
 dotenv.config();
 
@@ -19,26 +19,27 @@ app.get('/api/dashboard', async (req, res) => {
     const totalWaste = await get('SELECT COALESCE(SUM(waste_quantity), 0) AS value FROM purchases');
     const totalDelivered = await get('SELECT COALESCE(SUM(quantity_delivered), 0) AS value FROM deliveries');
     const totalStock = await get(
-      `SELECT COALESCE(SUM(quantity_purchased), 0) - COALESCE(SUM(waste_quantity), 0) - COALESCE((SELECT SUM(quantity_delivered) FROM deliveries), 0) AS value FROM purchases`
+      `SELECT COALESCE(SUM(quantity_purchased), 0) - COALESCE(SUM(waste_quantity), 0) - COALESCE((SELECT COALESCE(SUM(quantity_delivered), 0) FROM deliveries), 0) AS value FROM purchases`
     );
     const weeklyRevenue = await get(`
-      SELECT COALESCE(SUM(grand_total), 0) AS value FROM bills WHERE billing_date >= current_date - INTERVAL '7 days'
+      SELECT COALESCE(SUM(grand_total), 0) AS value FROM bills WHERE billing_date >= date('now', '-7 days')
     `);
     const pendingBills = await get(`
       SELECT COUNT(*) AS value FROM bills WHERE grand_total > 0
     `);
 
     res.json({
-      totalCompanies: Number(companyCount.value),
-      totalPurchased: Number(totalPurchased.value),
-      totalDelivered: Number(totalDelivered.value),
-      availableStock: Number(totalStock.value),
-      totalWaste: Number(totalWaste.value),
-      weeklyRevenue: Number(weeklyRevenue.value),
-      pendingBills: Number(pendingBills.value),
+      totalCompanies: Number(companyCount?.value || 0),
+      totalPurchased: Number(totalPurchased?.value || 0),
+      totalDelivered: Number(totalDelivered?.value || 0),
+      availableStock: Number(totalStock?.value || 0),
+      totalWaste: Number(totalWaste?.value || 0),
+      weeklyRevenue: Number(weeklyRevenue?.value || 0),
+      pendingBills: Number(pendingBills?.value || 0),
       recentCompanies: companies.map((company) => ({ ...company, remaining_stock: 0 }))
     });
   } catch (error) {
+    console.error('Dashboard error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -53,12 +54,12 @@ app.get('/api/companies', async (req, res) => {
 });
 
 app.post('/api/companies', async (req, res) => {
-  const { company_name, contact_person, phone_number, email, address, gst_number, plate_rate, gst_applicable } = req.body;
+  const { company_name, contact_person, phone_number, email, address, gst_percentage, plate_type, plate_rates } = req.body;
   try {
     const result = await query(
-      `INSERT INTO companies (company_name, contact_person, phone_number, email, address, gst_number, plate_rate, gst_applicable)
+      `INSERT INTO companies (company_name, contact_person, phone_number, email, address, gst_percentage, plate_type, plate_rates)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [company_name, contact_person, phone_number, email, address, gst_number, plate_rate, gst_applicable]
+      [company_name, contact_person, phone_number, email ?? null, address ?? null, gst_percentage || 0, plate_type ?? null, plate_rates ?? null]
     );
     res.json({ company: result.rows[0] });
   } catch (error) {
@@ -68,11 +69,11 @@ app.post('/api/companies', async (req, res) => {
 
 app.put('/api/companies/:id', async (req, res) => {
   const { id } = req.params;
-  const { company_name, contact_person, phone_number, email, address, gst_number, plate_rate, gst_applicable } = req.body;
+  const { company_name, contact_person, phone_number, email, address, gst_percentage, plate_type, plate_rates } = req.body;
   try {
     const result = await query(
-      `UPDATE companies SET company_name=$1, contact_person=$2, phone_number=$3, email=$4, address=$5, gst_number=$6, plate_rate=$7, gst_applicable=$8 WHERE id=$9 RETURNING *`,
-      [company_name, contact_person, phone_number, email, address, gst_number, plate_rate, gst_applicable, id]
+      `UPDATE companies SET company_name=$1, contact_person=$2, phone_number=$3, email=COALESCE($4, email), address=COALESCE($5, address), gst_percentage=$6, plate_type=$7, plate_rates=$8 WHERE id=$9 RETURNING *`,
+      [company_name, contact_person, phone_number, email ?? null, address ?? null, gst_percentage || 0, plate_type ?? null, plate_rates ?? null, id]
     );
     res.json({ company: result.rows[0] });
   } catch (error) {
@@ -231,7 +232,7 @@ app.post('/api/purchases', async (req, res) => {
     const result = await query(
       `INSERT INTO purchases (company_id, purchase_date, plate_type, quantity_purchased, waste_quantity, notes)
        VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-      [company_id, purchase_date, plate_type, quantity_purchased, waste_quantity, notes]
+      [company_id, purchase_date, plate_type ?? null, quantity_purchased, waste_quantity, null]
     );
     res.json({ purchase: result.rows[0] });
   } catch (error) {
@@ -251,7 +252,7 @@ app.get('/api/deliveries', async (req, res) => {
 });
 
 app.post('/api/deliveries', async (req, res) => {
-  const { delivery_date, company_id, quantity_delivered, notes } = req.body;
+  const { delivery_date, company_id, quantity_delivered, plate_type } = req.body;
   try {
     const stock = await get(
       `SELECT COALESCE(SUM(quantity_purchased),0) - COALESCE(SUM(waste_quantity),0) - COALESCE((SELECT SUM(quantity_delivered) FROM deliveries WHERE company_id=$1),0) AS available_stock
@@ -264,9 +265,9 @@ app.post('/api/deliveries', async (req, res) => {
     }
 
     const result = await query(
-      `INSERT INTO deliveries (company_id, delivery_date, quantity_delivered, notes)
-       VALUES ($1,$2,$3,$4) RETURNING *`,
-      [company_id, delivery_date, quantity_delivered, notes]
+      `INSERT INTO deliveries (company_id, delivery_date, plate_type, quantity_delivered, notes)
+       VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+      [company_id, delivery_date, plate_type ?? null, quantity_delivered, null]
     );
     res.json({ delivery: result.rows[0] });
   } catch (error) {
@@ -286,26 +287,48 @@ app.get('/api/bills', async (req, res) => {
 });
 
 app.post('/api/bills', async (req, res) => {
-  const {
-    company_id,
-    customer_name,
-    customer_gst,
-    billing_date,
-    quantity_delivered,
-    rate_per_plate,
-    gst_applicable,
-    gst_percentage,
-    gst_amount,
-    subtotal,
-    grand_total
-  } = req.body;
+  const { company_id, delivery_id, customer_gst, gst_percentage } = req.body;
+
+  if (!company_id || !delivery_id) {
+    return res.status(400).json({ error: 'Select a company delivery to create an invoice.' });
+  }
 
   try {
+    const delivery = await get(
+      `SELECT d.*, c.plate_rates, c.plate_rate FROM deliveries d JOIN companies c ON d.company_id = c.id WHERE d.id=$1 AND d.company_id=$2`,
+      [delivery_id, company_id]
+    );
+    if (!delivery) {
+      return res.status(404).json({ error: 'Delivery not found for this company.' });
+    }
+
+    const existingBill = await get('SELECT id FROM bills WHERE delivery_id=$1', [delivery_id]);
+    if (existingBill) {
+      return res.status(409).json({ error: 'This delivery has already been invoiced.' });
+    }
+
+    let plateRates = {};
+    try {
+      plateRates = JSON.parse(delivery.plate_rates || '{}');
+    } catch {
+      plateRates = {};
+    }
+    const hasConfiguredRate = Object.prototype.hasOwnProperty.call(plateRates, delivery.plate_type);
+    const ratePerPlate = hasConfiguredRate ? Number(plateRates[delivery.plate_type]) : Number(delivery.plate_rate);
+    if (!Number.isFinite(ratePerPlate) || (!hasConfiguredRate && ratePerPlate <= 0)) {
+      return res.status(400).json({ error: `Set a price for plate type ${delivery.plate_type} in the company entry first.` });
+    }
+
+    const quantityDelivered = Number(delivery.quantity_delivered);
+    const calculatedSubtotal = quantityDelivered * ratePerPlate;
+    const normalizedGstPercentage = Number(gst_percentage) || 0;
+    const calculatedGstAmount = calculatedSubtotal * normalizedGstPercentage / 100;
+    const calculatedGrandTotal = calculatedSubtotal + calculatedGstAmount;
     const invoiceNumber = `INV-${Date.now()}`;
     const result = await query(
-      `INSERT INTO bills (invoice_number, company_id, billing_date, customer_name, customer_gst, quantity_delivered, rate_per_plate, gst_applicable, gst_percentage, gst_amount, subtotal, grand_total)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
-      [invoiceNumber, company_id, billing_date, customer_name, customer_gst, quantity_delivered, rate_per_plate, gst_applicable, gst_percentage, gst_amount, subtotal, grand_total]
+      `INSERT INTO bills (invoice_number, company_id, delivery_id, billing_date, customer_name, customer_gst, quantity_delivered, plate_type, rate_per_plate, gst_percentage, gst_amount, subtotal, grand_total)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+      [invoiceNumber, company_id, delivery.id, delivery.delivery_date, null, customer_gst ?? null, quantityDelivered, delivery.plate_type ?? null, ratePerPlate, normalizedGstPercentage, calculatedGstAmount, calculatedSubtotal, calculatedGrandTotal]
     );
     res.json({ bill: result.rows[0] });
   } catch (error) {
@@ -329,7 +352,7 @@ app.put('/api/settings', async (req, res) => {
     phone_number,
     email,
     address,
-    gst_number,
+    gst_percentage,
     company_logo_url,
     signature_image_url,
     upi_qr_url,
@@ -340,10 +363,10 @@ app.put('/api/settings', async (req, res) => {
 
   try {
     const result = await query(
-      `UPDATE office_settings SET office_name=$1, owner_name=$2, phone_number=$3, email=$4, address=$5, gst_number=$6, company_logo_url=$7, signature_image_url=$8, upi_qr_url=$9, bank_name=$10, account_number=$11, ifsc_code=$12, updated_at=current_timestamp
+      `UPDATE office_settings SET office_name=$1, owner_name=$2, phone_number=$3, email=$4, address=$5, gst_percentage=$6, company_logo_url=$7, signature_image_url=$8, upi_qr_url=$9, bank_name=$10, account_number=$11, ifsc_code=$12, updated_at=current_timestamp
        WHERE id = (SELECT id FROM office_settings ORDER BY id DESC LIMIT 1)
        RETURNING *`,
-      [office_name, owner_name, phone_number, email, address, gst_number, company_logo_url, signature_image_url, upi_qr_url, bank_name, account_number, ifsc_code]
+      [office_name, owner_name, phone_number, email, address, gst_percentage || 0, company_logo_url, signature_image_url, upi_qr_url, bank_name, account_number, ifsc_code]
     );
     res.json({ settings: result.rows[0] });
   } catch (error) {
@@ -373,6 +396,10 @@ app.get('/api/reports', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
-});
+dbReady
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Backend server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch(() => process.exit(1));

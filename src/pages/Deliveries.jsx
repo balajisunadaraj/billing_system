@@ -5,7 +5,7 @@ const initialForm = {
   deliveryDate: '',
   companyId: '',
   quantityDelivered: '',
-  notes: ''
+  plateType: ''
 };
 
 export default function Deliveries() {
@@ -13,6 +13,8 @@ export default function Deliveries() {
   const [deliveries, setDeliveries] = useState([]);
   const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState('');
+  const selectedCompany = companies.find((company) => company.id === Number(form.companyId));
+  const availablePlateTypes = (selectedCompany?.plate_type || '').split(',').map((type) => type.trim()).filter(Boolean);
 
   useEffect(() => {
     loadData();
@@ -39,7 +41,7 @@ export default function Deliveries() {
           delivery_date: form.deliveryDate,
           company_id: Number(form.companyId),
           quantity_delivered: Number(form.quantityDelivered),
-          notes: form.notes
+          plate_type: form.plateType
         }
       });
       setMessage('Delivery recorded successfully.');
@@ -60,7 +62,11 @@ export default function Deliveries() {
           </div>
         </div>
       </div>
-      {message && <div className="message-box">{message}</div>}
+      {message && (
+        <div className={message.includes('recorded') ? 'message-box message-box-success' : 'message-box message-box-error'}>
+          {message}
+        </div>
+      )}
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="page-card">
           <form onSubmit={addDelivery} className="grid gap-5">
@@ -80,7 +86,7 @@ export default function Deliveries() {
                 <select
                   required
                   value={form.companyId}
-                  onChange={(event) => setForm({ ...form, companyId: event.target.value })}
+                  onChange={(event) => setForm({ ...form, companyId: event.target.value, plateType: '' })}
                   className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
                 >
                   <option value="">Select company</option>
@@ -93,6 +99,18 @@ export default function Deliveries() {
               </label>
             </div>
             <label className="block text-sm font-medium text-slate-700">
+              Plate Type
+              <select
+                required
+                value={form.plateType}
+                onChange={(event) => setForm({ ...form, plateType: event.target.value })}
+                className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
+              >
+                <option value="">Select plate type</option>
+                {availablePlateTypes.map((type) => <option key={type} value={type}>{type}</option>)}
+              </select>
+            </label>
+            <label className="block text-sm font-medium text-slate-700">
               Quantity Delivered
               <input
                 type="number"
@@ -102,16 +120,7 @@ export default function Deliveries() {
                 className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
               />
             </label>
-            <label className="block text-sm font-medium text-slate-700">
-              Notes
-              <textarea
-                value={form.notes}
-                onChange={(event) => setForm({ ...form, notes: event.target.value })}
-                rows={4}
-                className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
-              />
-            </label>
-            <button type="submit" className="rounded-3xl bg-slate-950 px-6 py-3 text-white transition hover:bg-slate-800">
+            <button type="submit" className="rounded-3xl bg-slate-950 px-6 py-3 text-white font-medium transition-all hover:bg-slate-800 active:scale-95 focus:ring-2 focus:ring-slate-400 focus:ring-offset-2">
               Save Delivery
             </button>
           </form>
@@ -125,8 +134,8 @@ export default function Deliveries() {
                 <tr>
                   <th>Date</th>
                   <th>Company</th>
+                  <th>Plate Type</th>
                   <th>Delivered</th>
-                  <th>Notes</th>
                 </tr>
               </thead>
               <tbody>
@@ -134,8 +143,8 @@ export default function Deliveries() {
                   <tr key={delivery.id} className="border-b border-slate-200 last:border-none">
                     <td>{delivery.delivery_date}</td>
                     <td>{delivery.company_name}</td>
+                    <td>{delivery.plate_type || 'Not set'}</td>
                     <td>{delivery.quantity_delivered}</td>
-                    <td>{delivery.notes || '—'}</td>
                   </tr>
                 ))}
                 {deliveries.length === 0 && (
