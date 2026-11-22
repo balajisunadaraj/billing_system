@@ -8,106 +8,117 @@ html {
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-slate-100/70 text-slate-900 antialiased font-sans;
 }
 
-button,
-input,
-select,
-textarea {
-  @apply font-sans;
+/* ===================== Keyframe Animations ===================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scaleUp {
+  animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ===================== Scrollbar ===================== */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(203, 213, 225, 0.3);
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.5);
+  background: #cbd5e1;
   border-radius: 9999px;
   transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.7);
+  background: #94a3b8;
 }
 
-/* ===================== Shadows & Effects ===================== */
-.shadow-soft {
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
-}
-
-.shadow-soft-hover {
-  transition: box-shadow 0.2s ease;
-}
-
-.shadow-soft-hover:hover {
-  box-shadow: 0 24px 72px rgba(15, 23, 42, 0.12);
-}
-
-/* ===================== Cards ===================== */
+/* ===================== Cards & Panels ===================== */
 .page-card {
-  @apply rounded-[32px] bg-white p-6 shadow-soft transition-all duration-200;
+  @apply rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm transition-all duration-200;
 }
 
 .page-card:hover {
-  @apply shadow-soft-hover;
+  @apply border-slate-300 shadow-md;
+}
+
+.stat-card {
+  @apply rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm transition-all duration-200 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5;
 }
 
 .section-title {
-  @apply mb-6 text-2xl font-semibold text-slate-900;
+  @apply text-xl font-bold text-slate-900;
 }
 
 .badge {
-  @apply inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 transition-colors;
+  @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-wide transition-colors;
+}
+
+.badge-neutral {
+  @apply bg-slate-100 text-slate-700 border border-slate-200;
+}
+
+.badge-success {
+  @apply bg-emerald-50 text-emerald-700 border border-emerald-200;
+}
+
+.badge-warning {
+  @apply bg-amber-50 text-amber-700 border border-amber-200;
 }
 
 /* ===================== Tables ===================== */
 .table-panel {
-  @apply overflow-x-auto rounded-[28px] border border-slate-200 bg-white shadow-soft;
+  @apply overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm;
 }
 
 .table-panel table {
-  @apply min-w-full border-collapse;
-}
-
-.table-panel th,
-.table-panel td {
-  @apply px-5 py-4 text-left text-sm text-slate-700;
+  @apply min-w-full border-collapse text-left;
 }
 
 .table-panel th {
-  @apply bg-slate-50 font-semibold text-slate-900 border-b border-slate-200;
+  @apply bg-slate-50/90 px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-600 border-b border-slate-200;
+}
+
+.table-panel td {
+  @apply px-4 py-3.5 text-sm text-slate-700 border-b border-slate-100;
 }
 
 .table-panel tbody tr {
-  @apply border-b border-slate-200 transition-all duration-200;
-}
-
-.table-panel tbody tr:last-child {
-  @apply border-none;
+  @apply transition-colors duration-150;
 }
 
 .table-panel tbody tr:hover {
-  @apply bg-slate-50;
+  @apply bg-slate-50/90;
 }
 
-.table-panel tbody tr:active {
-  @apply bg-slate-100;
+.table-panel tbody tr:last-child td {
+  @apply border-none;
 }
 
-/* ===================== Forms ===================== */
-.input-card {
-  @apply rounded-[28px] border border-slate-200 bg-slate-50 p-6;
-}
-
-/* Input styling improvements */
+/* ===================== Forms & Inputs ===================== */
 input[type="text"],
 input[type="email"],
 input[type="date"],
@@ -115,24 +126,29 @@ input[type="number"],
 input[type="password"],
 select,
 textarea {
-  @apply transition-all duration-200;
+  @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition-all duration-150 placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900;
 }
 
-input:focus,
-select:focus,
-textarea:focus {
-  @apply ring-2 ring-slate-400 ring-offset-2;
+/* ===================== Buttons ===================== */
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-slate-800 hover:shadow active:scale-[0.98] border border-slate-900;
 }
 
-input:invalid,
-select:invalid,
-textarea:invalid {
-  @apply border-rose-300 bg-rose-50;
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all duration-150 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 active:scale-[0.98];
+}
+
+.btn-small {
+  @apply inline-flex items-center justify-center rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-all duration-150 hover:bg-slate-800 active:scale-95;
+}
+
+.btn-danger {
+  @apply inline-flex items-center justify-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 transition-all duration-150 hover:bg-rose-100 hover:border-rose-300 active:scale-95;
 }
 
 /* ===================== Messages ===================== */
 .message-box {
-  @apply mt-6 rounded-[24px] px-5 py-4 text-sm font-medium backdrop-blur-sm border transition-all duration-200;
+  @apply rounded-xl border p-4 text-sm font-medium transition-all duration-200;
 }
 
 .message-box-success {
@@ -143,122 +159,7 @@ textarea:invalid {
   @apply bg-rose-50 text-rose-800 border-rose-200;
 }
 
-.message-box-info {
-  @apply bg-slate-100 text-slate-800 border-slate-200;
-}
-
-.message-box-warning {
-  @apply bg-amber-50 text-amber-800 border-amber-200;
-}
-
-/* ===================== Alerts/Notifications ===================== */
-.alert-box {
-  @apply rounded-3xl border p-5 transition-all duration-200;
-}
-
-.alert-success {
-  @apply border-emerald-100 bg-emerald-50 text-emerald-700;
-}
-
-.alert-warning {
-  @apply border-amber-100 bg-amber-50 text-amber-700;
-}
-
-.alert-info {
-  @apply border-cyan-100 bg-cyan-50 text-cyan-700;
-}
-
-.alert-error {
-  @apply border-rose-100 bg-rose-50 text-rose-700;
-}
-
-/* ===================== Buttons ===================== */
-button {
-  @apply transition-all duration-200 active:scale-95;
-}
-
-.btn-primary {
-  @apply rounded-3xl bg-slate-950 px-6 py-3 text-white font-medium transition-all hover:bg-slate-800 active:scale-95 focus:ring-2 focus:ring-slate-400 focus:ring-offset-2;
-}
-
-.btn-secondary {
-  @apply rounded-3xl border-2 border-slate-200 bg-white px-6 py-3 text-slate-900 font-medium transition-all hover:border-slate-300 hover:bg-slate-50 active:scale-95;
-}
-
-.btn-danger {
-  @apply rounded-2xl bg-rose-500 px-3 py-2 text-xs font-semibold text-white transition-all hover:bg-rose-600 active:scale-95;
-}
-
-.btn-small {
-  @apply rounded-2xl bg-slate-950 px-3 py-2 text-xs font-semibold text-white transition-all hover:bg-slate-800 active:scale-95;
-}
-
-/* ===================== Hero Section ===================== */
+/* ===================== Hero Banner ===================== */
 .hero-card {
-  @apply grid gap-6 rounded-[32px] bg-slate-950 p-8 text-white shadow-soft transition-all duration-200;
-}
-
-.hero-card h1 {
-  @apply text-3xl font-semibold;
-}
-
-.hero-card h2 {
-  @apply text-2xl font-semibold;
-}
-
-/* ===================== Gradient Cards ===================== */
-.gradient-card {
-  @apply rounded-[28px] p-6 text-white shadow-soft transition-all duration-200;
-}
-
-.gradient-card:hover {
-  @apply scale-105;
-}
-
-.gradient-cyan-blue {
-  @apply bg-gradient-to-br from-cyan-500 to-blue-600;
-}
-
-.gradient-violet-indigo {
-  @apply bg-gradient-to-br from-violet-500 to-indigo-600;
-}
-
-.gradient-emerald-teal {
-  @apply bg-gradient-to-br from-emerald-500 to-teal-600;
-}
-
-.gradient-slate-dark {
-  @apply bg-gradient-to-br from-slate-500 to-slate-700;
-}
-
-.gradient-amber-orange {
-  @apply bg-gradient-to-br from-amber-500 to-orange-600;
-}
-
-.gradient-fuchsia-pink {
-  @apply bg-gradient-to-br from-fuchsia-500 to-pink-600;
-}
-
-.gradient-rose-red {
-  @apply bg-gradient-to-br from-rose-500 to-red-600;
-}
-
-/* ===================== Loading State ===================== */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loading {
-  animation: spin 1s linear infinite;
-}
-
-/* ===================== Accessibility ===================== */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+  @apply relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-8 text-white shadow-md transition-all duration-200;
 }

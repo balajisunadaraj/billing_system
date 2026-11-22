@@ -2,14 +2,20 @@ import { Link } from 'react-router-dom';
 
 export default function NotFound() {
   return (
-    <div className="mx-auto mt-20 max-w-xl px-4">
-      <div className="page-card text-center">
-        <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Page not found</p>
-        <h1 className="mt-6 text-5xl font-semibold text-slate-900">404</h1>
-        <p className="mt-4 text-slate-600">The page you are looking for does not exist. Please return to the dashboard.</p>
-        <Link to="/dashboard" className="mt-8 inline-flex rounded-3xl bg-slate-950 px-6 py-3 text-white transition hover:bg-slate-800">
-          Go back
-        </Link>
+    <div className="mx-auto mt-16 max-w-md px-4">
+      <div className="page-card text-center py-10">
+        <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 border border-slate-200">
+          Error 404
+        </span>
+        <h1 className="mt-4 text-4xl font-bold tracking-tight text-slate-900">Page Not Found</h1>
+        <p className="mt-2 text-sm text-slate-500">
+          The requested page could not be located. Please return to the dashboard.
+        </p>
+        <div className="mt-6">
+          <Link to="/dashboard" className="btn-primary">
+            Back to Dashboard
+          </Link>
+        </div>
       </div>
     </div>
   );

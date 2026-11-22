@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { authFetch } from '../lib/api.js';
+import { useNotification } from '../context/NotificationContext.jsx';
+import { PurchasesIcon, PlusIcon } from '../components/Icons.jsx';
 
 const initialForm = {
-  purchaseDate: '',
+  purchaseDate: new Date().toISOString().split('T')[0],
   companyId: '',
   plateType: '',
   quantityPurchased: '',
-  wasteQuantity: '',
+  wasteQuantity: '0',
 };
 
 export default function Purchases() {
@@ -14,6 +16,9 @@ export default function Purchases() {
   const [purchases, setPurchases] = useState([]);
   const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { showPopup, showToast } = useNotification();
+
   const selectedCompany = companies.find((company) => company.id === Number(form.companyId));
   const availablePlateTypes = (selectedCompany?.plate_type || '').split(',').map((type) => type.trim()).filter(Boolean);
 
@@ -23,7 +28,10 @@ export default function Purchases() {
 
   async function loadData() {
     try {
-      const [companyRes, purchaseRes] = await Promise.all([authFetch('/companies'), authFetch('/purchases')]);
+      const [companyRes, purchaseRes] = await Promise.all([
+        authFetch('/companies'),
+        authFetch('/purchases')
+      ]);
       setCompanies(companyRes.companies || []);
       setPurchases(purchaseRes.purchases || []);
     } catch (error) {
@@ -35,61 +43,102 @@ export default function Purchases() {
     event.preventDefault();
     setMessage('');
 
+    const qty = Number(form.quantityPurchased);
+    const waste = Number(form.wasteQuantity || 0);
+
+    if (qty <= 0) {
+      setMessage('Quantity purchased must be greater than 0.');
+      return;
+    }
+    if (waste > qty) {
+      setMessage('Waste quantity cannot exceed total purchased quantity.');
+      return;
+    }
+
     try {
+      setLoading(true);
       await authFetch('/purchases', {
         method: 'POST',
         body: {
           purchase_date: form.purchaseDate,
           company_id: Number(form.companyId),
           plate_type: form.plateType,
-          quantity_purchased: Number(form.quantityPurchased),
-          waste_quantity: Number(form.wasteQuantity)
+          quantity_purchased: qty,
+          waste_quantity: waste
         }
       });
-      setMessage('Purchase entry saved.');
-      setForm(initialForm);
+
+      const netAvailable = qty - waste;
+      showPopup({
+        title: 'Purchase Entry Recorded!',
+        message: `Successfully registered purchase of ${qty} plates for ${selectedCompany?.company_name || 'selected company'}.`,
+        details: `Date: ${form.purchaseDate} • Type: ${form.plateType} • Net Stock Added: ${netAvailable} plates (Waste: ${waste})`
+      });
+
+      setForm({ ...initialForm, purchaseDate: form.purchaseDate });
       loadData();
     } catch (error) {
       setMessage(error.message);
+      showToast({ title: 'Error', message: error.message, type: 'error' });
+    } finally {
+      setLoading(false);
     }
   }
 
+  const availableQuantity = Math.max(0, Number(form.quantityPurchased || 0) - Number(form.wasteQuantity || 0));
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      {/* Header with Clean Border */}
       <div className="page-card">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Purchase Entry</p>
-            <h1 className="mt-2 text-3xl font-semibold text-slate-900">New Purchase</h1>
-          </div>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 border border-slate-200">
+            Inventory Inflow
+          </span>
         </div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Purchase Entry</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Record incoming raw material and plates received from manufacturing partners, tracking scrap and usable quantities.
+        </p>
       </div>
+
       {message && (
-        <div className={message.includes('saved') ? 'message-box message-box-success' : 'message-box message-box-error'}>
-          {message}
+        <div className="message-box message-box-error flex items-center justify-between">
+          <span>{message}</span>
+          <button onClick={() => setMessage('')} className="text-xs underline font-semibold">Dismiss</button>
         </div>
       )}
+
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        {/* Form Card */}
         <div className="page-card">
-          <form onSubmit={addPurchase} className="grid gap-5">
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="block text-sm font-medium text-slate-700">
-                Purchase Date
+          <div className="pb-4 mb-5 border-b border-slate-100">
+            <h2 className="section-title text-lg font-bold">New Purchase Record</h2>
+            <p className="text-xs text-slate-500">Enter batch supply specifics and defect counts</p>
+          </div>
+
+          <form onSubmit={addPurchase} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Purchase Date <span className="text-rose-500">*</span>
+                </label>
                 <input
                   type="date"
                   value={form.purchaseDate}
                   onChange={(event) => setForm({ ...form, purchaseDate: event.target.value })}
                   required
-                  className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
                 />
-              </label>
-              <label className="block text-sm font-medium text-slate-700">
-                Company
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Company / Supplier <span className="text-rose-500">*</span>
+                </label>
                 <select
                   required
                   value={form.companyId}
                   onChange={(event) => setForm({ ...form, companyId: event.target.value, plateType: '' })}
-                  className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
                 >
                   <option value="">Select company</option>
                   {companies.map((company) => (
@@ -98,86 +147,122 @@ export default function Purchases() {
                     </option>
                   ))}
                 </select>
-              </label>
+              </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="block text-sm font-medium text-slate-700">
-                Plate Type
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Plate Type <span className="text-rose-500">*</span>
+                </label>
                 <select
                   value={form.plateType}
                   onChange={(event) => setForm({ ...form, plateType: event.target.value })}
                   required
-                  className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
+                  disabled={!form.companyId}
                 >
-                  <option value="">Select plate type</option>
+                  <option value="">
+                    {!form.companyId ? 'Select company first' : availablePlateTypes.length ? 'Select plate type' : 'No plate types configured'}
+                  </option>
                   {availablePlateTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
+                    <option key={type} value={type}>Type {type}</option>
                   ))}
                 </select>
-              </label>
-              <label className="block text-sm font-medium text-slate-700">
-                Quantity Purchased
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Quantity Purchased <span className="text-rose-500">*</span>
+                </label>
                 <input
                   type="number"
+                  min="1"
+                  placeholder="e.g. 500"
                   value={form.quantityPurchased}
                   onChange={(event) => setForm({ ...form, quantityPurchased: event.target.value })}
                   required
-                  className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
                 />
-              </label>
+              </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="block text-sm font-medium text-slate-700">
-                Waste Quantity
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Waste / Defect Quantity
+                </label>
                 <input
                   type="number"
+                  min="0"
+                  placeholder="0"
                   value={form.wasteQuantity}
                   onChange={(event) => setForm({ ...form, wasteQuantity: event.target.value })}
-                  className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
                 />
-              </label>
-              <div className="block text-sm font-medium text-slate-700">
-                <span className="mb-2 block">Available Quantity</span>
-                <div className="mt-3 rounded-3xl border border-slate-200 bg-white px-4 py-3 text-slate-800">
-                  {Math.max(0, Number(form.quantityPurchased) - Number(form.wasteQuantity || 0))}
+              </div>
+
+              <div>
+                <span className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Net Available Stock
+                </span>
+                <div className="h-[42px] flex items-center px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-sm">
+                  {availableQuantity} plates
                 </div>
               </div>
             </div>
-            <button type="submit" className="rounded-3xl bg-slate-950 px-6 py-3 text-white font-medium transition-all hover:bg-slate-800 active:scale-95 focus:ring-2 focus:ring-slate-400 focus:ring-offset-2">
-              Save Purchase
-            </button>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={loading || !form.companyId}
+                className="w-full btn-primary"
+              >
+                {loading ? 'Recording...' : '+ Save Purchase Entry'}
+              </button>
+            </div>
           </form>
         </div>
 
+        {/* History Table Card with Clean Row Hover and Borders */}
         <div className="page-card">
-          <h2 className="section-title">Purchase History</h2>
+          <div className="pb-4 mb-4 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h2 className="section-title text-lg font-bold">Purchase Log</h2>
+              <p className="text-xs text-slate-500">{purchases.length} total entries recorded</p>
+            </div>
+          </div>
+
           <div className="table-panel">
             <table>
               <thead>
                 <tr>
                   <th>Date</th>
                   <th>Company</th>
-                  <th>Plate Type</th>
-                  <th>Purchased</th>
-                  <th>Waste</th>
-                  <th>Available</th>
+                  <th>Type</th>
+                  <th className="text-right">Purchased</th>
+                  <th className="text-right">Waste</th>
+                  <th className="text-right">Usable</th>
                 </tr>
               </thead>
               <tbody>
                 {purchases.map((purchase) => (
-                  <tr key={purchase.id} className="border-b border-slate-200 last:border-none">
-                    <td>{purchase.purchase_date}</td>
-                    <td>{purchase.company_name}</td>
-                    <td>{purchase.plate_type || 'Not set'}</td>
-                    <td>{purchase.quantity_purchased}</td>
-                    <td>{purchase.waste_quantity}</td>
-                    <td>{purchase.quantity_purchased - purchase.waste_quantity}</td>
+                  <tr key={purchase.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="text-slate-600 text-xs">{purchase.purchase_date}</td>
+                    <td className="font-medium text-slate-900">{purchase.company_name}</td>
+                    <td>
+                      <span className="text-xs font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
+                        Type {purchase.plate_type || 'N/A'}
+                      </span>
+                    </td>
+                    <td className="text-right font-medium text-slate-800">{purchase.quantity_purchased}</td>
+                    <td className="text-right text-rose-600 text-xs font-medium">{purchase.waste_quantity || 0}</td>
+                    <td className="text-right font-bold text-emerald-700">
+                      {purchase.quantity_purchased - (purchase.waste_quantity || 0)}
+                    </td>
                   </tr>
                 ))}
                 {purchases.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="p-6 text-center text-slate-500">
-                      No purchase records yet.
+                    <td colSpan="6" className="p-8 text-center text-slate-500 text-sm">
+                      No purchase entries recorded yet.
                     </td>
                   </tr>
                 )}

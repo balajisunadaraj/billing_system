@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import jsPDF from 'jspdf';
 import { authFetch } from '../lib/api.js';
+import { useNotification } from '../context/NotificationContext.jsx';
+import { BillsIcon, CurrencyRupeeIcon } from '../components/Icons.jsx';
 
 const OFFICE_WHATSAPP = '918270070097';
 const initialForm = {
@@ -17,21 +19,27 @@ export default function Bills() {
   const [settings, setSettings] = useState(null);
   const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { showPopup, showToast } = useNotification();
+
   const selectedCompany = companies.find((company) => company.id === Number(form.companyId));
   const availableDeliveries = deliveries.filter((delivery) =>
     Number(delivery.company_id) === Number(form.companyId) &&
     !bills.some((bill) => Number(bill.delivery_id) === Number(delivery.id))
   );
   const selectedDelivery = availableDeliveries.find((delivery) => Number(delivery.id) === Number(form.deliveryId));
+
   let plateRates = {};
   try {
     plateRates = JSON.parse(selectedCompany?.plate_rates || '{}');
   } catch {
     plateRates = {};
   }
+
   const ratePerPlate = selectedDelivery
     ? Number(plateRates[selectedDelivery.plate_type] ?? selectedCompany?.plate_rate ?? 0)
     : 0;
+
   const rateConfigured = selectedDelivery && (
     Object.prototype.hasOwnProperty.call(plateRates, selectedDelivery.plate_type) ||
     Number(selectedCompany?.plate_rate) > 0
@@ -67,7 +75,8 @@ export default function Bills() {
     setMessage('');
 
     try {
-      await authFetch('/bills', {
+      setLoading(true);
+      const res = await authFetch('/bills', {
         method: 'POST',
         body: {
           company_id: Number(form.companyId),
@@ -76,11 +85,21 @@ export default function Bills() {
           gst_percentage: Number(form.gstPercentage)
         }
       });
-      setMessage('Invoice generated.');
+
+      const invNo = res?.bill?.invoice_number || 'New Invoice';
+      showPopup({
+        title: 'Bill Generated Successfully!',
+        message: `Invoice ${invNo} generated for ${selectedCompany?.company_name || 'client'}.`,
+        details: `Plates: ${selectedDelivery.quantity_delivered} (Type ${selectedDelivery.plate_type}) • Rate: ₹${ratePerPlate.toFixed(2)} • Subtotal: ₹${subtotal.toFixed(2)} • Grand Total: ₹${grandTotal.toFixed(2)}`
+      });
+
       setForm(initialForm);
       loadData();
     } catch (error) {
       setMessage(error.message);
+      showToast({ title: 'Error', message: error.message, type: 'error' });
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -99,11 +118,11 @@ export default function Bills() {
     y += 16;
     doc.text(`Email: ${settings?.email || 'office@example.com'}`, left, y);
     y += 16;
-    doc.text(`GST Percentage: ${Number(settings?.gst_percentage) || 0}%`, left, y);
+    doc.text(`GST: ${settings?.gst_percentage ? Number(settings.gst_percentage) + '%' : 'N/A'}`, left, y);
 
     y += 32;
     doc.setFontSize(14);
-    doc.text('Invoice', left, y);
+    doc.text('TAX INVOICE', left, y);
     doc.setFontSize(11);
     y += 24;
     doc.text(`Invoice Number: ${bill.invoice_number}`, left, y);
@@ -114,7 +133,7 @@ export default function Bills() {
 
     y += 32;
     doc.setFontSize(12);
-    doc.text('Invoice Items', left, y);
+    doc.text('Invoice Line Items', left, y);
     const tableX = left;
     const tableWidth = 515;
     const headerY = y + 12;
@@ -167,8 +186,8 @@ export default function Bills() {
 
     y = totalsY + 36;
     doc.setFont('helvetica', 'normal');
-    doc.text('Authorized Signature', left, y);
-    doc.text(`Contact WhatsApp: +91 8270070097`, left, y + 20);
+    doc.text('Authorized Signatory', left, y);
+    doc.text(`Contact: +91 8270070097`, left, y + 20);
 
     return doc;
   }
@@ -176,6 +195,7 @@ export default function Bills() {
   function downloadInvoice(bill) {
     const doc = createInvoicePdf(bill);
     doc.save(`${bill.invoice_number}.pdf`);
+    showToast({ title: 'Download Started', message: `Saved ${bill.invoice_number}.pdf`, type: 'info' });
   }
 
   function printInvoice(bill) {
@@ -200,28 +220,44 @@ export default function Bills() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      {/* Header Card with Clean Border */}
       <div className="page-card">
-        <div>
-          <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Billing Module</p>
-          <h1 className="mt-2 text-3xl font-semibold text-slate-900">Generate Invoice</h1>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 border border-slate-200">
+            Financials
+          </span>
         </div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Billing & Invoice Generator</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Generate official tax invoices for unbilled deliveries, calculate GST, export PDF invoices, or share via WhatsApp and Email.
+        </p>
       </div>
+
       {message && (
-        <div className={message.includes('generated') ? 'message-box message-box-success' : 'message-box message-box-error'}>
-          {message}
+        <div className="message-box message-box-error flex items-center justify-between">
+          <span>{message}</span>
+          <button onClick={() => setMessage('')} className="text-xs underline font-semibold">Dismiss</button>
         </div>
       )}
+
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        {/* Invoice Generator Form */}
         <div className="page-card">
-          <form onSubmit={createBill} className="grid gap-5">
-            <label className="block text-sm font-medium text-slate-700">
-              Company
+          <div className="pb-4 mb-5 border-b border-slate-100">
+            <h2 className="section-title text-lg font-bold">Generate New Bill</h2>
+            <p className="text-xs text-slate-500">Select unbilled delivery batch and apply tax terms</p>
+          </div>
+
+          <form onSubmit={createBill} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                Client Company <span className="text-rose-500">*</span>
+              </label>
               <select
                 required
                 value={form.companyId}
                 onChange={(event) => setForm({ ...form, companyId: event.target.value, deliveryId: '' })}
-                className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
               >
                 <option value="">Select company</option>
                 {companies.map((company) => (
@@ -230,158 +266,186 @@ export default function Bills() {
                   </option>
                 ))}
               </select>
-            </label>
-            <label className="block text-sm font-medium text-slate-700">
-              Delivered Record
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                Unbilled Delivery Dispatch <span className="text-rose-500">*</span>
+              </label>
               <select
                 required
                 value={form.deliveryId}
                 disabled={!form.companyId || availableDeliveries.length === 0}
                 onChange={(event) => setForm({ ...form, deliveryId: event.target.value })}
-                className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500 disabled:opacity-60"
+                className="disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <option value="">
-                  {!form.companyId ? 'Select a company first' : availableDeliveries.length ? 'Select a delivery' : 'No unbilled deliveries'}
+                  {!form.companyId ? 'Select a company first' : availableDeliveries.length ? 'Select a delivery record' : 'No unbilled deliveries for this company'}
                 </option>
                 {availableDeliveries.map((delivery) => (
                   <option key={delivery.id} value={delivery.id}>
-                    {delivery.delivery_date} | Plate {delivery.plate_type} | {delivery.quantity_delivered} plates
+                    {delivery.delivery_date} — Plate Type {delivery.plate_type} ({delivery.quantity_delivered} plates)
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
+
+            {/* Selected Delivery Details Preview with Borders */}
             {selectedDelivery && (
-              <div className="table-panel">
-                <table className="min-w-[620px]">
-                  <thead>
-                    <tr>
-                      <th>Delivery Date</th>
-                      <th>Plate Type</th>
-                      <th className="text-right">Quantity</th>
-                      <th className="text-right">Rate</th>
-                      <th className="text-right">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>{selectedDelivery.delivery_date}</td>
-                      <td>{selectedDelivery.plate_type || 'Not set'}</td>
-                      <td className="text-right">{selectedDelivery.quantity_delivered}</td>
-                      <td className="text-right">{rateConfigured ? `₹${ratePerPlate.toFixed(2)}` : 'Not configured'}</td>
-                      <td className="text-right font-semibold">₹{subtotal.toFixed(2)}</td>
-                    </tr>
-                  </tbody>
-                </table>
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-3">
+                <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-200/80 pb-2">
+                  <span>Batch Summary</span>
+                  <span>Price Rate</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <div>
+                    <p className="font-semibold text-slate-900">
+                      Type {selectedDelivery.plate_type || 'N/A'} • {selectedDelivery.quantity_delivered} Plates
+                    </p>
+                    <p className="text-xs text-slate-500">Delivered on {selectedDelivery.delivery_date}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-slate-900">
+                      {rateConfigured ? `₹${ratePerPlate.toFixed(2)} / plate` : 'Rate Not Configured'}
+                    </p>
+                  </div>
+                </div>
+
                 {!rateConfigured && (
-                  <p className="px-5 py-3 text-sm text-rose-700">Set this plate type's price in the company entry before invoicing.</p>
+                  <p className="text-xs font-medium text-rose-600 bg-rose-50 p-2 rounded-lg border border-rose-200">
+                    Warning: Configure this plate type price in Company Settings before invoicing.
+                  </p>
                 )}
               </div>
             )}
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="block text-sm font-medium text-slate-700">
-                Customer GST
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Customer GST Number
+                </label>
                 <input
+                  placeholder="e.g. 33AAAAA0000A1Z5"
                   value={form.customerGst}
                   onChange={(event) => setForm({ ...form, customerGst: event.target.value })}
-                  className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
                 />
-              </label>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                  GST Percentage (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  placeholder="e.g. 18"
+                  value={form.gstPercentage}
+                  onChange={(event) => setForm({ ...form, gstPercentage: event.target.value })}
+                />
+              </div>
             </div>
-            <label className="block text-sm font-medium text-slate-700">
-              GST Percentage (Optional)
-              <input
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                value={form.gstPercentage}
-                onChange={(event) => setForm({ ...form, gstPercentage: event.target.value })}
-                className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-500"
-              />
-            </label>
-            <div className="table-panel">
-              <table>
-                <tbody>
-                  <tr>
-                    <th>Subtotal</th>
-                    <td className="text-right">₹{subtotal.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <th>GST ({Number(form.gstPercentage) || 0}%)</th>
-                    <td className="text-right">₹{gstAmount.toFixed(2)}</td>
-                  </tr>
-                  <tr className="font-semibold">
-                    <th>Grand Total</th>
-                    <td className="text-right font-semibold">₹{grandTotal.toFixed(2)}</td>
-                  </tr>
-                </tbody>
-              </table>
+
+            {/* Calculations Breakdown */}
+            <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
+              <div className="flex justify-between text-sm text-slate-600">
+                <span>Subtotal ({selectedDelivery?.quantity_delivered || 0} × ₹{ratePerPlate.toFixed(2)})</span>
+                <span className="font-medium text-slate-900">₹{subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-slate-600">
+                <span>GST Tax ({Number(form.gstPercentage) || 0}%)</span>
+                <span className="font-medium text-slate-900">₹{gstAmount.toFixed(2)}</span>
+              </div>
+              <div className="pt-2 border-t border-slate-100 flex justify-between text-base font-bold text-slate-900">
+                <span>Grand Total</span>
+                <span className="text-indigo-600 font-mono">₹{grandTotal.toFixed(2)}</span>
+              </div>
             </div>
-            <button type="submit" disabled={!selectedDelivery || !rateConfigured} className="rounded-3xl bg-slate-950 px-6 py-3 text-white font-medium transition-all hover:bg-slate-800 active:scale-95 focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-              Create Invoice
-            </button>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={loading || !selectedDelivery || !rateConfigured}
+                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Generating...' : '+ Generate & Record Bill'}
+              </button>
+            </div>
           </form>
         </div>
 
+        {/* Invoice History Card with Clean Row Hover Effects & Borders */}
         <div className="page-card">
-          <h2 className="section-title">Invoice History</h2>
+          <div className="pb-4 mb-4 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h2 className="section-title text-lg font-bold">Invoice History</h2>
+              <p className="text-xs text-slate-500">{bills.length} invoices generated</p>
+            </div>
+          </div>
+
           <div className="table-panel">
             <table>
               <thead>
                 <tr>
-                  <th>Invoice</th>
+                  <th>Invoice No</th>
                   <th>Date</th>
                   <th>Plate Type</th>
-                  <th className="text-right">Quantity</th>
-                  <th className="text-right">Rate</th>
+                  <th className="text-right">Qty</th>
                   <th className="text-right">Amount</th>
-                  <th>Actions</th>
+                  <th className="text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {bills.map((bill) => (
-                  <tr key={bill.id} className="border-b border-slate-200 last:border-none">
-                    <td>{bill.invoice_number}</td>
-                    <td>{bill.billing_date}</td>
-                    <td>{bill.plate_type || 'Not set'}</td>
-                    <td className="text-right">{bill.quantity_delivered}</td>
-                    <td className="text-right">₹{Number(bill.rate_per_plate).toFixed(2)}</td>
-                    <td className="text-right">₹{Number(bill.grand_total).toFixed(2)}</td>
-                    <td className="space-x-2 py-4 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => downloadInvoice(bill)}
-                        className="rounded-2xl bg-slate-950 px-3 py-2 text-xs font-semibold text-white transition-all hover:bg-slate-800 active:scale-95"
-                      >
-                        Download
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => printInvoice(bill)}
-                        className="rounded-2xl bg-slate-700 px-3 py-2 text-xs font-semibold text-white transition-all hover:bg-slate-600 active:scale-95"
-                      >
-                        Print
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => shareInvoiceWhatsApp(bill)}
-                        className="rounded-2xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-white transition-all hover:bg-emerald-600 active:scale-95"
-                      >
-                        WhatsApp
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => shareInvoiceEmail(bill)}
-                        className="rounded-2xl bg-sky-500 px-3 py-2 text-xs font-semibold text-white transition-all hover:bg-sky-600 active:scale-95"
-                      >
-                        Email
-                      </button>
+                  <tr key={bill.id} className="hover:bg-slate-50 transition-colors">
+                    <td>
+                      <span className="font-bold text-slate-900">{bill.invoice_number}</span>
+                      <span className="block text-xs text-slate-500">{bill.company_name}</span>
+                    </td>
+                    <td className="text-xs text-slate-600">{bill.billing_date}</td>
+                    <td>
+                      <span className="text-xs font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
+                        Type {bill.plate_type || 'N/A'}
+                      </span>
+                    </td>
+                    <td className="text-right font-medium">{bill.quantity_delivered}</td>
+                    <td className="text-right font-bold text-slate-900 font-mono">
+                      ₹{Number(bill.grand_total).toFixed(2)}
+                    </td>
+                    <td className="text-right">
+                      <div className="inline-flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => downloadInvoice(bill)}
+                          title="Download PDF"
+                          className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 hover:border-slate-300 transition-all"
+                        >
+                          PDF
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => printInvoice(bill)}
+                          title="Print Invoice"
+                          className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 hover:border-slate-300 transition-all"
+                        >
+                          Print
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => shareInvoiceWhatsApp(bill)}
+                          title="Share via WhatsApp"
+                          className="rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition-all"
+                        >
+                          WA
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
                 {bills.length === 0 && (
                   <tr>
-                    <td colSpan="7" className="p-6 text-center text-slate-500">
+                    <td colSpan="6" className="p-8 text-center text-slate-500 text-sm">
                       No invoices created yet.
                     </td>
                   </tr>
