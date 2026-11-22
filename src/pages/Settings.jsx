@@ -61,7 +61,7 @@ export default function Settings() {
 
   return (
     <div className="space-y-6">
-      {/* Header Card with Clean Border */}
+      {/* Header Card */}
       <div className="page-card">
         <div className="flex items-center gap-2 mb-1">
           <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 border border-slate-200">
@@ -81,16 +81,18 @@ export default function Settings() {
         </div>
       )}
 
-      <div className="page-card">
+      {/* Main Settings Form Card */}
+      <div className="form-card">
         <form onSubmit={saveSettings} className="space-y-6">
           {/* Section 1: Business Identity */}
-          <div>
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 pb-2 border-b border-slate-100 mb-4">
-              1. Business & Contact Information
-            </h2>
+          <div className="form-section">
+            <div className="form-section-title">
+              <span>1. Business & Contact Information</span>
+              <span className="text-[11px] font-normal text-slate-400 normal-case">Primary Office Identity</span>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Office / Company Name <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -101,8 +103,8 @@ export default function Settings() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Proprietor / Owner Name
                 </label>
                 <input
@@ -113,9 +115,9 @@ export default function Settings() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 mt-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="form-group">
+                <label className="form-label">
                   Official Phone Number
                 </label>
                 <input
@@ -125,8 +127,8 @@ export default function Settings() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Official Email Address
                 </label>
                 <input
@@ -138,8 +140,8 @@ export default function Settings() {
               </div>
             </div>
 
-            <div className="mt-4">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            <div className="form-group">
+              <label className="form-label">
                 Office Registered Address
               </label>
               <textarea
@@ -152,13 +154,14 @@ export default function Settings() {
           </div>
 
           {/* Section 2: Tax & Assets */}
-          <div>
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 pb-2 border-b border-slate-100 mb-4">
-              2. Taxation & Invoice Branding
-            </h2>
+          <div className="form-section">
+            <div className="form-section-title">
+              <span>2. Taxation & Invoice Branding</span>
+              <span className="text-[11px] font-normal text-slate-400 normal-case">PDF & Receipt Headers</span>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Default GST Percentage (%)
                 </label>
                 <input
@@ -172,9 +175,9 @@ export default function Settings() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                  Company Logo URL (Optional)
+              <div className="form-group">
+                <label className="form-label">
+                  Company Logo URL <span className="text-slate-400 font-normal text-xs">(Optional)</span>
                 </label>
                 <input
                   placeholder="https://..."
@@ -184,10 +187,10 @@ export default function Settings() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 mt-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                  Authorized Signature URL (Optional)
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="form-group">
+                <label className="form-label">
+                  Authorized Signature URL <span className="text-slate-400 font-normal text-xs">(Optional)</span>
                 </label>
                 <input
                   placeholder="https://..."
@@ -196,9 +199,9 @@ export default function Settings() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                  UPI Payment QR Code URL (Optional)
+              <div className="form-group">
+                <label className="form-label">
+                  UPI Payment QR Code URL <span className="text-slate-400 font-normal text-xs">(Optional)</span>
                 </label>
                 <input
                   placeholder="https://..."
@@ -210,13 +213,14 @@ export default function Settings() {
           </div>
 
           {/* Section 3: Bank Details */}
-          <div>
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 pb-2 border-b border-slate-100 mb-4">
-              3. Bank Details for Invoice Settlement
-            </h2>
+          <div className="form-section">
+            <div className="form-section-title">
+              <span>3. Bank Details for Invoice Settlement</span>
+              <span className="text-[11px] font-normal text-slate-400 normal-case">Wire & NEFT Information</span>
+            </div>
             <div className="grid gap-4 sm:grid-cols-3">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Bank Name
                 </label>
                 <input
@@ -226,8 +230,8 @@ export default function Settings() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Account Number
                 </label>
                 <input
@@ -237,8 +241,8 @@ export default function Settings() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   IFSC Code
                 </label>
                 <input
@@ -250,11 +254,11 @@ export default function Settings() {
             </div>
           </div>
 
-          <div className="pt-2">
+          <div className="pt-2 flex justify-end">
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary"
+              className="btn-primary min-w-[200px]"
             >
               {loading ? 'Saving Changes...' : 'Save Office Settings'}
             </button>

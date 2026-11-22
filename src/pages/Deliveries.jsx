@@ -99,17 +99,17 @@ export default function Deliveries() {
       )}
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        {/* Delivery Form Card */}
-        <div className="page-card">
+        {/* Neat & Elegant Delivery Form Card */}
+        <div className="form-card">
           <div className="pb-4 mb-5 border-b border-slate-100">
-            <h2 className="section-title text-lg font-bold">New Delivery Record</h2>
-            <p className="text-xs text-slate-500">Specify delivery date, client company, and plate count</p>
+            <h2 className="section-title text-base font-bold text-slate-900">New Delivery Record</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Specify delivery date, client company, and plate count</p>
           </div>
 
           <form onSubmit={addDelivery} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Delivery Date <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -120,8 +120,8 @@ export default function Deliveries() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Client Company <span className="text-rose-500">*</span>
                 </label>
                 <select
@@ -140,8 +140,8 @@ export default function Deliveries() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Plate Type <span className="text-rose-500">*</span>
                 </label>
                 <select
@@ -159,8 +159,8 @@ export default function Deliveries() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Quantity Delivered <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -186,11 +186,11 @@ export default function Deliveries() {
           </form>
         </div>
 
-        {/* History Table Card with Row Hover Effects & Borders */}
+        {/* History Table Card */}
         <div className="page-card">
           <div className="pb-4 mb-4 border-b border-slate-100 flex items-center justify-between">
             <div>
-              <h2 className="section-title text-lg font-bold">Delivery Log</h2>
+              <h2 className="section-title text-base font-bold">Delivery Log</h2>
               <p className="text-xs text-slate-500">{deliveries.length} total dispatches recorded</p>
             </div>
           </div>
@@ -207,9 +207,9 @@ export default function Deliveries() {
               </thead>
               <tbody>
                 {deliveries.map((delivery) => (
-                  <tr key={delivery.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={delivery.id} className="hover:bg-slate-50/90 transition-colors">
                     <td className="text-slate-600 text-xs">{delivery.delivery_date}</td>
-                    <td className="font-medium text-slate-900">{delivery.company_name}</td>
+                    <td className="font-semibold text-slate-900">{delivery.company_name}</td>
                     <td>
                       <span className="text-xs font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
                         Type {delivery.plate_type || 'N/A'}

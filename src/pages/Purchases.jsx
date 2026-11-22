@@ -110,17 +110,17 @@ export default function Purchases() {
       )}
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        {/* Form Card */}
-        <div className="page-card">
+        {/* Neat & Elegant Form Card */}
+        <div className="form-card">
           <div className="pb-4 mb-5 border-b border-slate-100">
-            <h2 className="section-title text-lg font-bold">New Purchase Record</h2>
-            <p className="text-xs text-slate-500">Enter batch supply specifics and defect counts</p>
+            <h2 className="section-title text-base font-bold text-slate-900">New Purchase Record</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Specify delivery date, supplying partner, and defect counts</p>
           </div>
 
           <form onSubmit={addPurchase} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Purchase Date <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -131,8 +131,8 @@ export default function Purchases() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Company / Supplier <span className="text-rose-500">*</span>
                 </label>
                 <select
@@ -151,8 +151,8 @@ export default function Purchases() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Plate Type <span className="text-rose-500">*</span>
                 </label>
                 <select
@@ -170,8 +170,8 @@ export default function Purchases() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Quantity Purchased <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -186,8 +186,8 @@ export default function Purchases() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Waste / Defect Quantity
                 </label>
                 <input
@@ -199,12 +199,15 @@ export default function Purchases() {
                 />
               </div>
 
-              <div>
-                <span className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <span className="form-label">
                   Net Available Stock
                 </span>
-                <div className="h-[42px] flex items-center px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-sm">
-                  {availableQuantity} plates
+                <div className="h-[44px] flex items-center justify-between px-5 rounded-full border-2 border-slate-400 bg-slate-50/50 text-slate-900 text-sm shadow-textbox">
+                  <span className="text-xs text-slate-500">Usable Plates</span>
+                  <span className="font-bold text-emerald-800 font-mono bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200">
+                    {availableQuantity}
+                  </span>
                 </div>
               </div>
             </div>
@@ -221,11 +224,11 @@ export default function Purchases() {
           </form>
         </div>
 
-        {/* History Table Card with Clean Row Hover and Borders */}
+        {/* History Table Card */}
         <div className="page-card">
           <div className="pb-4 mb-4 border-b border-slate-100 flex items-center justify-between">
             <div>
-              <h2 className="section-title text-lg font-bold">Purchase Log</h2>
+              <h2 className="section-title text-base font-bold">Purchase Log</h2>
               <p className="text-xs text-slate-500">{purchases.length} total entries recorded</p>
             </div>
           </div>
@@ -244,16 +247,16 @@ export default function Purchases() {
               </thead>
               <tbody>
                 {purchases.map((purchase) => (
-                  <tr key={purchase.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={purchase.id} className="hover:bg-slate-50/90 transition-colors">
                     <td className="text-slate-600 text-xs">{purchase.purchase_date}</td>
-                    <td className="font-medium text-slate-900">{purchase.company_name}</td>
+                    <td className="font-semibold text-slate-900">{purchase.company_name}</td>
                     <td>
                       <span className="text-xs font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
                         Type {purchase.plate_type || 'N/A'}
                       </span>
                     </td>
                     <td className="text-right font-medium text-slate-800">{purchase.quantity_purchased}</td>
-                    <td className="text-right text-rose-600 text-xs font-medium">{purchase.waste_quantity || 0}</td>
+                    <td className="text-right text-rose-600 text-xs font-semibold">{purchase.waste_quantity || 0}</td>
                     <td className="text-right font-bold text-emerald-700">
                       {purchase.quantity_purchased - (purchase.waste_quantity || 0)}
                     </td>

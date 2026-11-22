@@ -221,7 +221,7 @@ export default function Bills() {
 
   return (
     <div className="space-y-6">
-      {/* Header Card with Clean Border */}
+      {/* Header Card */}
       <div className="page-card">
         <div className="flex items-center gap-2 mb-1">
           <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 border border-slate-200">
@@ -242,16 +242,16 @@ export default function Bills() {
       )}
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        {/* Invoice Generator Form */}
-        <div className="page-card">
+        {/* Neat & Elegant Invoice Generator Form Card */}
+        <div className="form-card">
           <div className="pb-4 mb-5 border-b border-slate-100">
-            <h2 className="section-title text-lg font-bold">Generate New Bill</h2>
-            <p className="text-xs text-slate-500">Select unbilled delivery batch and apply tax terms</p>
+            <h2 className="section-title text-base font-bold text-slate-900">Generate New Bill</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Select unbilled delivery batch and apply tax terms</p>
           </div>
 
           <form onSubmit={createBill} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            <div className="form-group">
+              <label className="form-label">
                 Client Company <span className="text-rose-500">*</span>
               </label>
               <select
@@ -268,8 +268,8 @@ export default function Bills() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            <div className="form-group">
+              <label className="form-label">
                 Unbilled Delivery Dispatch <span className="text-rose-500">*</span>
               </label>
               <select
@@ -290,12 +290,12 @@ export default function Bills() {
               </select>
             </div>
 
-            {/* Selected Delivery Details Preview with Borders */}
+            {/* Selected Delivery Details Preview with Crisp Card */}
             {selectedDelivery && (
-              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-3">
-                <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-200/80 pb-2">
+              <div className="rounded-xl border border-slate-200/90 bg-slate-50/60 p-4 space-y-3">
+                <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-200/70 pb-2">
                   <span>Batch Summary</span>
-                  <span>Price Rate</span>
+                  <span>Configured Rate</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <div>
@@ -320,8 +320,8 @@ export default function Bills() {
             )}
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Customer GST Number
                 </label>
                 <input
@@ -331,8 +331,8 @@ export default function Bills() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   GST Percentage (%)
                 </label>
                 <input
@@ -348,7 +348,7 @@ export default function Bills() {
             </div>
 
             {/* Calculations Breakdown */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
+            <div className="rounded-xl border border-slate-200/90 bg-slate-50/40 p-4 space-y-2">
               <div className="flex justify-between text-sm text-slate-600">
                 <span>Subtotal ({selectedDelivery?.quantity_delivered || 0} × ₹{ratePerPlate.toFixed(2)})</span>
                 <span className="font-medium text-slate-900">₹{subtotal.toFixed(2)}</span>
@@ -357,9 +357,9 @@ export default function Bills() {
                 <span>GST Tax ({Number(form.gstPercentage) || 0}%)</span>
                 <span className="font-medium text-slate-900">₹{gstAmount.toFixed(2)}</span>
               </div>
-              <div className="pt-2 border-t border-slate-100 flex justify-between text-base font-bold text-slate-900">
+              <div className="pt-2 border-t border-slate-200 flex justify-between text-base font-bold text-slate-900">
                 <span>Grand Total</span>
-                <span className="text-indigo-600 font-mono">₹{grandTotal.toFixed(2)}</span>
+                <span className="text-slate-900 font-mono text-lg">₹{grandTotal.toFixed(2)}</span>
               </div>
             </div>
 
@@ -375,11 +375,11 @@ export default function Bills() {
           </form>
         </div>
 
-        {/* Invoice History Card with Clean Row Hover Effects & Borders */}
+        {/* Invoice History Card */}
         <div className="page-card">
           <div className="pb-4 mb-4 border-b border-slate-100 flex items-center justify-between">
             <div>
-              <h2 className="section-title text-lg font-bold">Invoice History</h2>
+              <h2 className="section-title text-base font-bold">Invoice History</h2>
               <p className="text-xs text-slate-500">{bills.length} invoices generated</p>
             </div>
           </div>
@@ -398,7 +398,7 @@ export default function Bills() {
               </thead>
               <tbody>
                 {bills.map((bill) => (
-                  <tr key={bill.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={bill.id} className="hover:bg-slate-50/90 transition-colors">
                     <td>
                       <span className="font-bold text-slate-900">{bill.invoice_number}</span>
                       <span className="block text-xs text-slate-500">{bill.company_name}</span>
@@ -419,7 +419,7 @@ export default function Bills() {
                           type="button"
                           onClick={() => downloadInvoice(bill)}
                           title="Download PDF"
-                          className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 hover:border-slate-300 transition-all"
+                          className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 hover:border-slate-300 transition-all"
                         >
                           PDF
                         </button>
@@ -427,7 +427,7 @@ export default function Bills() {
                           type="button"
                           onClick={() => printInvoice(bill)}
                           title="Print Invoice"
-                          className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 hover:border-slate-300 transition-all"
+                          className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 hover:border-slate-300 transition-all"
                         >
                           Print
                         </button>
@@ -435,7 +435,7 @@ export default function Bills() {
                           type="button"
                           onClick={() => shareInvoiceWhatsApp(bill)}
                           title="Share via WhatsApp"
-                          className="rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition-all"
+                          className="rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-all"
                         >
                           WA
                         </button>

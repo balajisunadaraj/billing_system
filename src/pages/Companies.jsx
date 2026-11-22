@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authFetch } from '../lib/api.js';
 import { useNotification } from '../context/NotificationContext.jsx';
-import { SearchIcon, PlusIcon, CompaniesIcon } from '../components/Icons.jsx';
+import { SearchIcon, PlusIcon, CompaniesIcon, CheckCircleIcon } from '../components/Icons.jsx';
 
 const initialForm = {
   name: '',
@@ -115,7 +115,7 @@ export default function Companies() {
 
   return (
     <div className="space-y-6">
-      {/* Header Card with Clean Border and Hover */}
+      {/* Header Card */}
       <div className="page-card">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -130,12 +130,13 @@ export default function Companies() {
             </p>
           </div>
           <div className="relative w-full sm:w-72">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
             <input
+              type="text"
               placeholder="Search by company or contact..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              className="pl-9 pr-4 py-2 text-sm rounded-xl border border-slate-200 bg-white hover:border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-all"
+              style={{ paddingLeft: '2.6rem' }}
             />
           </div>
         </div>
@@ -149,15 +150,15 @@ export default function Companies() {
       )}
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        {/* Form Card */}
-        <div className="page-card">
+        {/* Neat & Elegant Form Card */}
+        <div className="form-card">
           <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-100">
             <div>
-              <h2 className="section-title text-lg font-bold">
-                {selected ? 'Edit Company' : 'Add New Company'}
+              <h2 className="section-title text-base font-bold text-slate-900">
+                {selected ? 'Edit Company Profile' : 'Add New Company'}
               </h2>
-              <p className="text-xs text-slate-500">
-                {selected ? 'Modify existing company credentials' : 'Register a new customer profile'}
+              <p className="text-xs text-slate-500 mt-0.5">
+                {selected ? 'Update existing business details and rates' : 'Register a new customer account in the system'}
               </p>
             </div>
             {selected && (
@@ -167,7 +168,7 @@ export default function Companies() {
                   setSelected(null);
                   setForm(initialForm);
                 }}
-                className="text-xs font-medium text-slate-500 hover:text-slate-900 underline"
+                className="text-xs font-semibold text-slate-500 hover:text-slate-900 underline"
               >
                 Cancel Edit
               </button>
@@ -176,8 +177,8 @@ export default function Companies() {
 
           <form onSubmit={saveCompany} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Company Name <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -187,8 +188,8 @@ export default function Companies() {
                   onChange={(event) => setForm({ ...form, name: event.target.value })}
                 />
               </div>
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <div className="form-group">
+                <label className="form-label">
                   Contact Person
                 </label>
                 <input
@@ -199,8 +200,8 @@ export default function Companies() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            <div className="form-group">
+              <label className="form-label">
                 Phone Number
               </label>
               <input
@@ -210,9 +211,9 @@ export default function Companies() {
               />
             </div>
 
-            {/* Plate Types Selection with Crisp Interactive Borders */}
-            <div className="pt-2">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
+            {/* Supported Plate Types with Elegant Pill Chips */}
+            <div className="pt-1">
+              <label className="form-label mb-2">
                 Supported Plate Types <span className="text-rose-500">*</span>
               </label>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -221,9 +222,9 @@ export default function Companies() {
                   return (
                     <label
                       key={type}
-                      className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 cursor-pointer text-sm font-semibold transition-all duration-150 ${
+                      className={`flex items-center justify-center gap-1.5 rounded-xl border py-2 px-2.5 cursor-pointer text-xs font-semibold transition-all duration-150 select-none ${
                         isChecked
-                          ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
+                          ? 'border-slate-900 bg-slate-900 text-white shadow-xs'
                           : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                       }`}
                     >
@@ -249,14 +250,14 @@ export default function Companies() {
 
               {/* Price rate per selected type */}
               {form.plateTypes.length > 0 && (
-                <div className="mt-4 p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-3">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">
+                <div className="mt-4 rounded-xl border border-slate-200/80 bg-slate-50/60 p-4 space-y-3">
+                  <span className="text-xs font-semibold text-slate-800 uppercase tracking-wider block">
                     Set Price per Plate (₹)
-                  </p>
+                  </span>
                   <div className="grid gap-3 sm:grid-cols-2">
                     {form.plateTypes.map((type) => (
-                      <div key={type}>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                      <div key={type} className="form-group">
+                        <label className="form-label text-slate-600">
                           Type {type} Rate (₹)
                         </label>
                         <input
@@ -284,18 +285,18 @@ export default function Companies() {
                 disabled={loading}
                 className="w-full btn-primary"
               >
-                {loading ? 'Saving...' : selected ? 'Update Company Details' : '+ Register Company'}
+                {loading ? 'Saving...' : selected ? 'Update Company Profile' : '+ Register Company'}
               </button>
             </div>
           </form>
         </div>
 
-        {/* Company List Table Card with Row Hover Effects & Borders */}
+        {/* Company List Table Card */}
         <div className="page-card">
           <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
             <div>
-              <h2 className="section-title text-lg font-bold">Company Directory</h2>
-              <p className="text-xs text-slate-500">{filtered.length} companies registered</p>
+              <h2 className="section-title text-base font-bold">Company Directory</h2>
+              <p className="text-xs text-slate-500">{filtered.length} registered accounts</p>
             </div>
           </div>
 
@@ -323,7 +324,7 @@ export default function Companies() {
                   }
 
                   return (
-                    <tr key={company.id} className="hover:bg-slate-50 transition-colors">
+                    <tr key={company.id} className="hover:bg-slate-50/90 transition-colors">
                       <td>
                         <button
                           onClick={() => navigate(`/companies/${company.id}`)}
@@ -346,7 +347,7 @@ export default function Companies() {
                           <button
                             type="button"
                             onClick={() => editCompany(company)}
-                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 hover:border-slate-300 transition-all"
+                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 hover:border-slate-300 transition-all"
                           >
                             Edit
                           </button>
